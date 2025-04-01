@@ -1,6 +1,6 @@
 ARG IMAGE_EXT
 
-ARG BASE=7.0.9ec3
+ARG BASE=7.0.8ad3
 ARG REGISTRY=ghcr.io/epics-containers
 ARG RUNTIME=${REGISTRY}/epics-base${IMAGE_EXT}-runtime:${BASE}
 ARG DEVELOPER=${REGISTRY}/epics-base${IMAGE_EXT}-developer:${BASE}
@@ -29,43 +29,42 @@ RUN pip install --upgrade -r requirements.txt
 
 WORKDIR ${SOURCE_FOLDER}/ibek-support
 
-# copy the global ibek files
-COPY ibek-support/_global/ _global
+COPY ibek-support/_ansible _ansible
+ENV PATH=$PATH:${SOURCE_FOLDER}/ibek-support/_ansible
 
 COPY ibek-support/iocStats/ iocStats
-RUN iocStats/install.sh 3.2.0
+RUN ansible.sh iocStats
+
+COPY ibek-support/pvlogging/ pvlogging/
+RUN ansible.sh pvlogging
+
+COPY ibek-support/busy/ busy
+RUN ansible.sh busy
 
 COPY ibek-support/sequencer/ sequencer
-RUN sequencer/install.sh R2-2-5
+RUN ansible.sh sequencer
 
-COPY ibek-support/asyn/ asyn/
-RUN asyn/install.sh R4-42
+COPY ibek-support/sscan/ sscan
+RUN ansible.sh sscan
 
 COPY ibek-support/std/ std
-RUN std/install.sh R3-6-4
-
-COPY ibek-support/busy/ busy/
-RUN busy/install.sh R1-7-3
-
-COPY ibek-support/sscan/ sscan/
-RUN sscan/install.sh R2-11-6
-
-COPY ibek-support/calc/ calc/
-RUN calc/install.sh R3-7-5
+RUN ansible.sh std
 
 COPY ibek-support/autosave/ autosave/
-RUN autosave/install.sh R5-11
+RUN ansible.sh autosave
 
-################################################################################
-#  TODO - Add further support module installations here
-################################################################################
+COPY ibek-support/asyn/ asyn
+RUN ansible.sh asyn
+
+COPY ibek-support/calc/ calc
+RUN ansible.sh calc
+
+COPY ibek-support/ADCore/ ADCore
+RUN ansible.sh ADCore
 
 # get the ioc source and build it
 COPY ioc ${SOURCE_FOLDER}/ioc
-RUN cd ${IOC} && ./install.sh && make
-
-# install runtime proxy for non-native builds
-RUN bash ${IOC}/install_proxy.sh
+RUN ansible.sh ioc
 
 ##### runtime preparation stage ################################################
 FROM developer AS runtime_prep
