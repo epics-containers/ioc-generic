@@ -1,6 +1,6 @@
 ARG IMAGE_EXT
 
-ARG BASE=7.0.8ad3
+ARG BASE=7.0.9ec3
 ARG REGISTRY=ghcr.io/epics-containers
 ARG RUNTIME=${REGISTRY}/epics-base${IMAGE_EXT}-runtime:${BASE}
 ARG DEVELOPER=${REGISTRY}/epics-base${IMAGE_EXT}-developer:${BASE}
@@ -58,9 +58,6 @@ RUN ansible.sh asyn
 
 COPY ibek-support/calc/ calc
 RUN ansible.sh calc
-
-COPY ibek-support/ADCore/ ADCore
-RUN ansible.sh ADCore
 
 # get the ioc source and build it
 COPY ioc ${SOURCE_FOLDER}/ioc
