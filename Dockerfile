@@ -38,9 +38,6 @@ RUN ansible.sh iocStats
 COPY ibek-support/pvlogging/ pvlogging/
 RUN ansible.sh pvlogging
 
-COPY ibek-support/busy/ busy
-RUN ansible.sh busy
-
 COPY ibek-support/sequencer/ sequencer
 RUN ansible.sh sequencer
 
@@ -55,6 +52,9 @@ RUN ansible.sh autosave
 
 COPY ibek-support/asyn/ asyn
 RUN ansible.sh asyn
+
+COPY ibek-support/busy/ busy
+RUN ansible.sh busy
 
 COPY ibek-support/calc/ calc
 RUN ansible.sh calc
