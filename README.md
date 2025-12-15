@@ -12,9 +12,9 @@ To update to the latest version of the template:
 ```bash
 # activate a python virtual environment
 
-pip install copier
+module load uv
 cd ioc-generic
-copier update -a --trust .
+uvx copier update -A --trust .
 ```
 
 ## Developer Container

@@ -1,6 +1,11 @@
+<<<<<<< before updating
 ibek==3.1.4
 # useful for debugging
 ipython
 p4p
+=======
+ibek>=3.3.1
+>>>>>>> after updating
 # to install direct from github during development in a branch
 # git+https://github.com/epics-containers/ibek.git@fix-extract-assets
+stdio-socket>=1.2.0
