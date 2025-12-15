@@ -1,9 +1,16 @@
 ARG IMAGE_EXT
 
+<<<<<<< before updating
 ARG BASE=7.0.9ec3
+=======
+>>>>>>> after updating
 ARG REGISTRY=ghcr.io/epics-containers
-ARG RUNTIME=${REGISTRY}/epics-base${IMAGE_EXT}-runtime:${BASE}
-ARG DEVELOPER=${REGISTRY}/epics-base${IMAGE_EXT}-developer:${BASE}
+ARG RUNTIME=${REGISTRY}/epics-base${IMAGE_EXT}-runtime:7.0.9ec5
+ARG DEVELOPER=${REGISTRY}/epics-base${IMAGE_EXT}-developer:7.0.9ec5
+# for pre-built common support and faster builds of this generic IOC:
+# - change above to￼DEVELOPER=${REGISTRY}/ioc-asyn${IMAGE_EXT}-developer:4.45ec2
+# - comment out uv pip install lines below (unless a newer ibek is needed)
+# - remove ansible.sh lines for all support modules provided by ioc-asyn
 
 ##### build stage ##############################################################
 FROM  ${DEVELOPER} AS developer
@@ -25,16 +32,17 @@ RUN ln -s ${SOURCE_FOLDER}/ioc ${IOC}
 
 # Get the current version of ibek
 COPY requirements.txt requirements.txt
-RUN pip install --upgrade -r requirements.txt
+RUN uv pip install --upgrade -r requirements.txt
 
 WORKDIR ${SOURCE_FOLDER}/ibek-support
 
-# copy the global ibek files
-COPY ibek-support/_global/ _global
+COPY ibek-support/_ansible _ansible
+ENV PATH=$PATH:${SOURCE_FOLDER}/ibek-support/_ansible
 
 COPY ibek-support/iocStats/ iocStats
-RUN iocStats/install.sh 3.2.0
+RUN ansible.sh iocStats
 
+<<<<<<< before updating
 COPY ibek-support/sequencer/ sequencer
 RUN sequencer/install.sh R2-2-5
 
@@ -59,19 +67,24 @@ RUN autosave/install.sh R5-11
 ################################################################################
 #  TODO - Add further support module installations here
 ################################################################################
+=======
+COPY ibek-support/pvlogging/ pvlogging/
+RUN ansible.sh pvlogging
+
+COPY ibek-support/autosave/ autosave
+RUN ansible.sh autosave
+>>>>>>> after updating
 
 # get the ioc source and build it
 COPY ioc ${SOURCE_FOLDER}/ioc
-RUN cd ${IOC} && ./install.sh && make
-
-# install runtime proxy for non-native builds
-RUN bash ${IOC}/install_proxy.sh
+RUN ansible.sh ioc
 
 ##### runtime preparation stage ################################################
 FROM developer AS runtime_prep
 
 # get the products from the build stage and reduce to runtime assets only
-RUN ibek ioc extract-runtime-assets /assets
+# /python is created by uv and is needed in the runtime target
+RUN ibek ioc extract-runtime-assets /assets /python
 
 ##### runtime stage ############################################################
 FROM ${RUNTIME} AS runtime
@@ -80,6 +93,7 @@ FROM ${RUNTIME} AS runtime
 COPY --from=runtime_prep /assets /
 
 # install runtime system dependencies, collected from install.sh scripts
-RUN ibek support apt-install-runtime-packages --skip-non-native
+RUN ibek support apt-install-runtime-packages
 
+# launch the startup script with stdio-expose to allow console connections
 CMD ["bash", "-c", "${IOC}/start.sh"]
