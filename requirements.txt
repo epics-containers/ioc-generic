@@ -1,11 +1,7 @@
-<<<<<<< before updating
-ibek==3.1.4
-# useful for debugging
-ipython
-p4p
-=======
-ibek>=3.3.1
->>>>>>> after updating
+# pin versions of pvi or ibek if needed
+pvi
+# ioc/start.sh needs 'ibek runtime place-files', first released in 4.6.1
+ibek>=4.7.0
 # to install direct from github during development in a branch
 # git+https://github.com/epics-containers/ibek.git@fix-extract-assets
-stdio-socket>=1.2.0
+stdio-socket>=1.4.0
