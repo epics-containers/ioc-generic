@@ -17,6 +17,14 @@ cd ioc-generic
 uvx copier update -A --trust .
 ```
 
+Note: this repository intentionally launches its devcontainer from the
+published `ioc-generic-developer` image rather than building it locally.
+The template always emits a `"build"` block in
+`.devcontainer/devcontainer.json`, so `copier update` is expected to leave
+conflict markers in that file. Resolve them by keeping the `"image"` line
+(and bumping its tag if a newer release exists), and check that no
+`<<<<<<<`/`>>>>>>>` markers remain before committing.
+
 ## Developer Container
 
 This repository includes a developer container configuration for Visual Studio Code. This allows you to run the Generic IOC locally and debug it. See https://epics-containers.github.io/main/tutorials/dev_container.html.
