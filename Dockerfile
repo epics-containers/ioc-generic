@@ -1,15 +1,9 @@
-ARG IMAGE_EXT
-
 ARG REGISTRY=ghcr.io/epics-containers
-ARG RUNTIME=${REGISTRY}/epics-base${IMAGE_EXT}-runtime:7.0.9ec5
-# base this image on the standard set of support modules including asyn
-ARG DEVELOPER=${REGISTRY}/ioc-asyn${IMAGE_EXT}-developer:4.45ec2
+ARG RUNTIME=${REGISTRY}/epics-base-runtime:7.0.10ec4-beta.2
+ARG DEVELOPER=${REGISTRY}/epics-base-developer:7.0.10ec4-beta.2
 
 ##### build stage ##############################################################
 FROM  ${DEVELOPER} AS developer
-
-# initiate ioc image verson variable for manifest
-ARG IOC_VERSION=unknown
 
 # The devcontainer mounts the project root to /epics/generic-source
 # Using the same location here makes devcontainer/runtime differences transparent.
@@ -20,6 +14,40 @@ RUN ln -s ${SOURCE_FOLDER}/ioc ${IOC}
 # get the current versions of pvi and ibek
 COPY requirements.txt requirements.txt
 RUN uv pip install --upgrade -r requirements.txt
+
+##### common support modules ###################################################
+# the same set that ioc-asyn provides. This IOC used to be based on the
+# ioc-asyn developer image, which is not yet available for resolute/arm64,
+# so these are now built here on top of epics-base.
+
+WORKDIR ${SOURCE_FOLDER}/ibek-support
+
+COPY ibek-support/_ansible _ansible
+ENV PATH=$PATH:${SOURCE_FOLDER}/ibek-support/_ansible
+
+COPY ibek-support/iocStats/ iocStats
+RUN ansible.sh iocStats
+
+COPY ibek-support/sequencer/ sequencer
+RUN ansible.sh sequencer
+
+COPY ibek-support/sscan/ sscan
+RUN ansible.sh sscan
+
+COPY ibek-support/calc/ calc
+RUN ansible.sh calc
+
+COPY ibek-support/asyn/ asyn
+RUN ansible.sh asyn
+
+COPY ibek-support/busy/ busy
+RUN ansible.sh busy
+
+COPY ibek-support/autosave/ autosave
+RUN ansible.sh autosave
+
+COPY ibek-support/pvlogging/ pvlogging
+RUN ansible.sh pvlogging
 
 ##### Additional support modules would go here##################################
 
@@ -33,6 +61,9 @@ COPY ioc ${SOURCE_FOLDER}/ioc
 RUN ansible.sh ioc
 
 # generate a manifest of installed EPICS modules and python packages
+# IOC_VERSION is declared here, not earlier: every RUN after an ARG sees it,
+# so a new value (each branch or tag) would rebuild all the steps above
+ARG IOC_VERSION=unknown
 COPY scripts/generate_manifest.py /tmp/generate_manifest.py
 RUN python3 /tmp/generate_manifest.py "${IOC_VERSION}"
 
@@ -41,7 +72,8 @@ FROM developer AS runtime_prep
 
 # get the products from the build stage and reduce to runtime assets only
 # /python is created by uv and is needed in the runtime target
-RUN ibek ioc extract-runtime-assets /assets /python
+# /epics/versions.json is the manifest of support module and python versions
+RUN ibek ioc extract-runtime-assets /assets /python /epics/versions.json
 
 ##### runtime stage ############################################################
 FROM ${RUNTIME} AS runtime
