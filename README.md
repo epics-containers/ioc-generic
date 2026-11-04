@@ -14,7 +14,7 @@ To update to the latest version of the template:
 
 module load uv
 cd ioc-generic
-uvx copier update -A --trust .
+uvx copier update --trust .
 ```
 
 Note: this repository intentionally launches its devcontainer from the
