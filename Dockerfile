@@ -49,6 +49,13 @@ RUN ansible.sh autosave
 COPY ibek-support/pvlogging/ pvlogging
 RUN ansible.sh pvlogging
 
+# std must follow asyn and sequencer: stdInclude.dbd includes asyn.dbd so
+# dbdExpand.pl cannot create std.dbd until asyn is installed, and libstd.a
+# needs snc for the .st sources. This matches the module order of the core
+# group in ibek-support/build-groups.yml.
+COPY ibek-support/std/ std
+RUN ansible.sh std
+
 ##### Additional support modules would go here##################################
 
 # e.g.
